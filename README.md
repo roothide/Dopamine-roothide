@@ -51,6 +51,8 @@ This project is the RootHide implementation based on Dopamine Jailbreak.
 
 # Info
 
+[roothide-discord-server](https://discord.gg/scqCkumAYp)
+
 [theos-discord-server](https://theos.dev/discord)
 
 [sileo-discrod-server](https://discord.com/invite/Udn4kQg)
