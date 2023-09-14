@@ -18,7 +18,7 @@ This project is the RootHide implementation based on Dopamine Jailbreak.
 - [x]  linker/loader works with randomized /var/jb/
 - [x]  symlinks works with randomized /var/jb/
 - [x]  Implements a middle layer to convert path
-- [ ]  Adapt theos tools for RootHide
+- [x]  Adapt theos tools for RootHide
 - [ ]  Original Rootless Compat Layer
 - [x]  Adapt bootstraps for RootHide
 - [x]  Adapt Sileo store for RootHide
