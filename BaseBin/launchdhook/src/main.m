@@ -12,6 +12,7 @@
 #import "xpc_hook.h"
 #import "daemon_hook.h"
 #import "ipc_hook.h"
+#import "dsc_hook.h"
 #import "crashreporter.h"
 #import "../systemhook/src/common.h"
 
@@ -61,9 +62,8 @@ __attribute__((constructor)) static void initializer(void)
 			if (identifier) {
 				if ([identifier isEqualToString:@"receivePPLRW"])
 				{
-					uint64_t magicPage = [(NSNumber*)message[@"magicPage"] unsignedLongLongValue];
 					boomerangPid = [(NSNumber*)message[@"boomerangPid"] intValue];
-					initPPLPrimitives(magicPage);
+					initPPLPrimitives();
 					dispatch_semaphore_signal(sema);
 				}
 			}
@@ -92,7 +92,6 @@ __attribute__((constructor)) static void initializer(void)
 			break;
 		}
 	}
-
 	// System wide sandbox extensions and root path
 	setenv("JB_SANDBOX_EXTENSIONS", generateSystemWideSandboxExtensions().UTF8String, 1);
 	setenv("JB_ROOT_PATH", prebootPath(nil).fileSystemRepresentation, 1);
@@ -100,10 +99,13 @@ __attribute__((constructor)) static void initializer(void)
 	JB_RootPath = strdup(getenv("JB_ROOT_PATH"));
 
 	proc_set_debugged_pid(getpid(), false);
+	
+	
 	initXPCHooks();
 	initDaemonHooks();
 	initSpawnHooks();
 	initIPCHooks();
+	initDSCHooks();
 
 	// This will ensure launchdhook is always reinjected after userspace reboots
 	// As this launchd will pass environ to the next launchd...

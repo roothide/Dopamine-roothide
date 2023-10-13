@@ -1,4 +1,16 @@
 #include "litehook.h"
+#include <stdarg.h>
+#include <stdbool.h>
+#include <sys/types.h>
+#include <string.h>
+#include <sys/fcntl.h>
+#include <mach/mach.h>
+#include <mach/arm/kern_return.h>
+#include <mach/port.h>
+#include <mach/vm_prot.h>
+#include <mach-o/dyld.h>
+#include <dlfcn.h>
+#include <libkern/OSCacheControl.h>
 
 static uint64_t __attribute((naked)) __xpaci(uint64_t a)
 {
@@ -45,9 +57,9 @@ uint32_t br(uint8_t x)
 
 __attribute__((noinline, naked)) volatile kern_return_t litehook_vm_protect(mach_port_name_t target, mach_vm_address_t address, mach_vm_size_t size, boolean_t set_maximum, vm_prot_t new_protection)
 {
-    __asm("mov x16, #0xFFFFFFFFFFFFFFF2");
-    __asm("svc 0x80");
-    __asm("ret");
+	__asm("mov x16, #0xFFFFFFFFFFFFFFF2");
+	__asm("svc 0x80");
+	__asm("ret");
 }
 
 kern_return_t litehook_unprotect(vm_address_t addr, vm_size_t size)
@@ -62,10 +74,12 @@ kern_return_t litehook_protect(vm_address_t addr, vm_size_t size)
 
 kern_return_t litehook_hook_function(void *source, void *target)
 {
+	kern_return_t kr = KERN_SUCCESS;
+
 	uint32_t *toHook = (uint32_t*)xpaci((uint64_t)source);
 	uint64_t target64 = (uint64_t)xpaci((uint64_t)target);
 
-	kern_return_t kr = litehook_unprotect((vm_address_t)toHook, 5*4);
+	kr = litehook_unprotect((vm_address_t)toHook, 5*4);
 	if (kr != KERN_SUCCESS) return kr;
 
 	toHook[0] = movk(16, target64 >> 0, 0);
@@ -73,9 +87,12 @@ kern_return_t litehook_hook_function(void *source, void *target)
 	toHook[2] = movk(16, target64 >> 32, 32);
 	toHook[3] = movk(16, target64 >> 48, 48);
 	toHook[4] = br(16);
+	uint32_t hookSize = 5 * sizeof(uint32_t);
 
-	kr = litehook_protect((vm_address_t)toHook, 5*4);
+	kr = litehook_protect((vm_address_t)toHook, hookSize);
 	if (kr != KERN_SUCCESS) return kr;
+
+	sys_icache_invalidate(toHook, hookSize);
 
 	return KERN_SUCCESS;
 }

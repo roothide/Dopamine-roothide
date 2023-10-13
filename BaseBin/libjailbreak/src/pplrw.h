@@ -1,5 +1,8 @@
 #import <Foundation/Foundation.h>
 
+#define PPLRW_USER_MAPPING_OFFSET   0x7000000000
+#define PPLRW_USER_MAPPING_TTEP_IDX (PPLRW_USER_MAPPING_OFFSET / 0x1000000000)
+
 typedef enum {
 	kPPLRWStatusNotInitialized = 0,
 	kPPLRWStatusInitialized = 1
@@ -9,10 +12,15 @@ extern PPLRWStatus gPPLRWStatus;
 // This can be called manually to batch together multiple PPLRW operations for maximum performance
 void gPPLRWQueue_dispatch(void (^block)(void));
 
-uint64_t va_to_pa(uint64_t table, uint64_t virt, bool *err);
+uint64_t unsign_kptr(uint64_t a);
+
+uint64_t phystokv(uint64_t pa);
+uint64_t vtophys(uint64_t ttep, uint64_t va);
+uint64_t kvtophys(uint64_t va);
+void *phystouaddr(uint64_t pa);
+void *kvtouaddr(uint64_t va);
+
 uint64_t kaddr_to_pa(uint64_t virt, bool *err);
-void *mapInVirtual(uint64_t pageStart, uint32_t pageCount, uint8_t** mappingStart);
-void mappingDestroy(void* ctx);
 
 int physreadbuf(uint64_t physaddr, void* output, size_t size);
 int physwritebuf(uint64_t physaddr, const void* input, size_t size);
@@ -41,5 +49,5 @@ int kwrite32(uint64_t va, uint32_t v);
 int kwrite16(uint64_t va, uint16_t v);
 int kwrite8(uint64_t va, uint8_t v);
 
-void initPPLPrimitives(uint64_t magicPage);
+void initPPLPrimitives(void);
 
